@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>for you 🩷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink-pale:#ffe3ef;
+    --pink-soft:#ffc3dd;
+    --pink-hot:#ff6fa5;
+    --pink-deep:#c9184a;
+    --cream:#fff8f5;
+    --plum:#4a2545;
+    --plum-soft:#8a5c78;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    font-family:'Quicksand', sans-serif;
+    background: radial-gradient(circle at 20% 20%, #fff0f6 0%, var(--pink-pale) 45%, var(--pink-soft) 100%);
+    min-height:100vh;
+    color:var(--plum);
+    overflow-x:hidden;
+  }
+
+  /* ---------- ambient floating hearts on background ---------- */
+  .bg-heart{
+    position:fixed;
+    top:-40px;
+    font-size:1.4rem;
+    opacity:0.35;
+    animation:drift linear infinite;
+    pointer-events:none;
+    z-index:0;
+  }
+  @keyframes drift{
+    to{ transform: translateY(110vh) rotate(30deg); }
+  }
+
+  /* ---------- screens ---------- */
+  .screen{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px 20px;
+    z-index:1;
+  }
+  .hidden{ display:none !important; }
+
+  /* ---------- intro ---------- */
+  #intro h1{
+    font-family:'Caveat', cursive;
+    font-size:clamp(2.6rem, 8vw, 4.2rem);
+    color:var(--pink-deep);
+    text-align:center;
+    line-height:1.15;
+  }
+  #intro p{
+    max-width:420px;
+    text-align:center;
+    margin-top:14px;
+    color:var(--plum-soft);
+    font-weight:500;
+    line-height:1.5;
+  }
+  .rules{
+    margin-top:22px;
+    background:#fff;
+    border:2px dashed var(--pink-soft);
+    border-radius:18px;
+    padding:16px 20px;
+    max-width:380px;
+    font-size:0.92rem;
+    color:var(--plum-soft);
+  }
+  .rules b{ color:var(--pink-deep); }
+
+  button{
+    font-family:'Quicksand', sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    border:none;
+    cursor:pointer;
+    border-radius:999px;
+    padding:14px 34px;
+    background:var(--pink-hot);
+    color:#fff;
+    box-shadow:0 8px 20px rgba(255,111,165,0.45);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    margin-top:26px;
+  }
+  button:hover{ transform:translateY(-2px) scale(1.03); box-shadow:0 12px 24px rgba(255,111,165,0.55); }
+  button:active{ transform:translateY(0) scale(0.98); }
+  button:focus-visible{ outline:3px solid var(--pink-deep); outline-offset:3px; }
+
+  /* ---------- game ---------- */
+  #game{ display:none; }
+  #game.active{ display:flex; }
+  .hud{
+    position:fixed;
+    top:18px; left:0; right:0;
+    display:flex;
+    justify-content:space-between;
+    padding:0 22px;
+    font-weight:700;
+    color:var(--pink-deep);
+    font-size:1.05rem;
+    z-index:5;
+    pointer-events:none;
+  }
+  .hud span{
+    background:#fff;
+    padding:8px 16px;
+    border-radius:999px;
+    box-shadow:0 4px 12px rgba(201,24,74,0.15);
+  }
+  #playfield{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    cursor: crosshair;
+  }
+  .falling{
+    position:absolute;
+    top:-60px;
+    font-size:2.1rem;
+    background:none;
+    border:none;
+    line-height:1;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.12));
+    animation-name:fall;
+    animation-timing-function:linear;
+    padding:6px;
+  }
+  @keyframes fall{
+    to{ transform:translateY(115vh); }
+  }
+  .pop{
+    animation:pop 0.35s ease forwards !important;
+  }
+  @keyframes pop{
+    to{ transform:scale(1.8); opacity:0; }
+  }
+
+  #countdown{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Caveat', cursive;
+    font-size:6rem;
+    color:var(--pink-deep);
+    z-index:20;
+    background:rgba(255,227,239,0.85);
+  }
+
+  /* ---------- letter screen ---------- */
+  #letterScreen{ display:none; }
+  #letterScreen.active{ display:flex; }
+
+  .envelope-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+  .envelope-wrap p.hint{
+    margin-top:16px;
+    color:var(--plum-soft);
+    font-weight:600;
+  }
+
+  .envelope{
+    width:min(320px, 80vw);
+    height:200px;
+    position:relative;
+    cursor:pointer;
+    filter:drop-shadow(0 14px 24px rgba(201,24,74,0.25));
+  }
+  .env-body{
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, #fff, #fff0f6);
+    border-radius:12px;
+    border:2px solid var(--pink-soft);
+  }
+  .env-flap{
+    position:absolute;
+    top:0; left:0; right:0;
+    height:0;
+    border-left:160px solid transparent;
+    border-right:160px solid transparent;
+    border-top:110px solid var(--pink-soft);
+    transform-origin:top;
+    transition:transform 0.6s ease;
+    z-index:2;
+  }
+  .envelope.open .env-flap{
+    transform:rotateX(180deg);
+  }
+  .seal{
+    position:absolute;
+    top:78px; left:50%;
+    transform:translateX(-50%);
+    width:46px; height:46px;
+    background:var(--pink-deep);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff;
+    font-size:1.3rem;
+    z-index:3;
+    box-shadow:0 4px 10px rgba(201,24,74,0.5);
+    transition:opacity 0.3s ease;
+  }
+  .envelope.open .seal{ opacity:0; pointer-events:none; }
+
+  .letter-paper{
+    display:none;
+    max-width:560px;
+    width:min(560px, 92vw);
+    background:var(--cream);
+    border-radius:6px;
+    padding:38px 34px 44px;
+    box-shadow:0 20px 50px rgba(74,37,69,0.25);
+    position:relative;
+    margin-top:10px;
+    animation:riseUp 0.5s ease;
+  }
+  .letter-paper.show{ display:block; }
+  @keyframes riseUp{
+    from{ opacity:0; transform:translateY(24px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .letter-paper::before{
+    content:"";
+    position:absolute;
+    top:0; left:24px; right:24px;
+    height:6px;
+    background:repeating-linear-gradient(90deg, var(--pink-soft) 0 18px, transparent 18px 30px);
+    border-radius:0 0 8px 8px;
+  }
+  .letter-title{
+    font-family:'Caveat', cursive;
+    color:var(--pink-deep);
+    font-size:2.2rem;
+    margin-bottom:14px;
+  }
+  .letter-body{
+    font-family:'Caveat', cursive;
+    font-size:1.5rem;
+    line-height:1.55;
+    color:var(--plum);
+    white-space:pre-wrap;
+  }
+  .signature{
+    margin-top:18px;
+    font-family:'Caveat', cursive;
+    font-size:1.7rem;
+    color:var(--pink-deep);
+    text-align:right;
+  }
+
+  .replay{
+    margin-top:22px;
+    background:transparent;
+    color:var(--pink-deep);
+    border:2px solid var(--pink-hot);
+    box-shadow:none;
+  }
+  .replay:hover{ background:var(--pink-hot); color:#fff; }
+
+  @media (prefers-reduced-motion: reduce){
+    .bg-heart, .falling, .env-flap, .letter-paper{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ambient floating hearts -->
+<div id="bgHearts"></div>
+
+<!-- INTRO SCREEN -->
+<div class="screen" id="intro">
+  <h1>hi you 🩷</h1>
+  <p>made you a lil game. catch <b>15 pink hearts</b> before they hit the ground and something's waiting for you at the end.</p>
+  <div class="rules">
+    <b>how to play:</b> click / tap the 💗 as they fall. avoid the 💔 — those don't count (and slow you down if you miss too many). ready?
+  </div>
+  <button id="startBtn">start the game</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="game">
+  <div class="hud">
+    <span id="scoreDisplay">💗 0 / 15</span>
+    <span id="missDisplay">💔 0</span>
+  </div>
+  <div id="playfield"></div>
+</div>
+
+<div id="countdown" class="hidden"></div>
+
+<!-- LETTER SCREEN -->
+<div class="screen" id="letterScreen">
+  <div class="envelope-wrap">
+    <div class="envelope" id="envelope">
+      <div class="env-flap"></div>
+      <div class="env-body"></div>
+      <div class="seal">🩷</div>
+    </div>
+    <p class="hint" id="envHint">you win 🎉 — tap the envelope</p>
+
+    <div class="letter-paper" id="letterPaper">
+      <div class="letter-title">for you</div>
+      <div class="letter-body" id="letterBody"></div>
+      <div class="signature">— you know who</div>
+    </div>
+
+    <button class="replay hidden" id="replayBtn">play again</button>
+  </div>
+</div>
+
+<script>
+  // ---------- ambient background hearts ----------
+  const bgHeartsContainer = document.getElementById('bgHearts');
+  const bgSymbols = ['🩷','💗','✨'];
+  for(let i=0;i<14;i++){
+    const el = document.createElement('div');
+    el.className = 'bg-heart';
+    el.textContent = bgSymbols[Math.floor(Math.random()*bgSymbols.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (10 + Math.random()*14) + 's';
+    el.style.animationDelay = (Math.random()*10) + 's';
+    el.style.fontSize = (1 + Math.random()*1.4) + 'rem';
+    bgHeartsContainer.appendChild(el);
+  }
+
+  // ---------- game state ----------
+  const WIN_SCORE = 15;
+  let score = 0;
+  let misses = 0;
+  let spawnTimer = null;
+  let gameActive = false;
+
+  const introScreen = document.getElementById('intro');
+  const gameScreen = document.getElementById('game');
+  const letterScreen = document.getElementById('letterScreen');
+  const playfield = document.getElementById('playfield');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const missDisplay = document.getElementById('missDisplay');
+  const countdownEl = document.getElementById('countdown');
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    introScreen.classList.add('hidden');
+    runCountdown();
+  });
+
+  function runCountdown(){
+    let n = 3;
+    countdownEl.classList.remove('hidden');
+    countdownEl.textContent = n;
+    const iv = setInterval(() => {
+      n--;
+      if(n === 0){
+        countdownEl.textContent = 'go! 🩷';
+      } else if(n < 0){
+        clearInterval(iv);
+        countdownEl.classList.add('hidden');
+        startGame();
+      } else {
+        countdownEl.textContent = n;
+      }
+    }, 700);
+  }
+
+  function startGame(){
+    gameScreen.classList.add('active');
+    gameActive = true;
+    score = 0; misses = 0;
+    updateHUD();
+    spawnLoop();
+  }
+
+  function updateHUD(){
+    scoreDisplay.textContent = `💗 ${score} / ${WIN_SCORE}`;
+    missDisplay.textContent = `💔 ${misses}`;
+  }
+
+  function spawnLoop(){
+    if(!gameActive) return;
+    spawnHeart();
+    const delay = Math.max(420, 900 - score*20);
+    spawnTimer = setTimeout(spawnLoop, delay);
+  }
+
+  function spawnHeart(){
+    const isBad = Math.random() < 0.22;
+    const el = document.createElement('button');
+    el.className = 'falling';
+    el.setAttribute('aria-label', isBad ? 'broken heart, avoid' : 'pink heart, catch it');
+    el.textContent = isBad ? '💔' : (Math.random() < 0.5 ? '💗' : '🩷');
+    el.style.left = (Math.random()*88 + 2) + 'vw';
+    const duration = 4 + Math.random()*2.2;
+    el.style.animationDuration = duration + 's';
+
+    el.addEventListener('click', () => {
+      if(!gameActive) return;
+      el.classList.add('pop');
+      if(isBad){
+        misses++;
+      } else {
+        score++;
+      }
+      updateHUD();
+      setTimeout(() => el.remove(), 350);
+      if(score >= WIN_SCORE){
+        endGame();
+      }
+    });
+
+    el.addEventListener('animationend', (e) => {
+      if(e.animationName === 'fall'){
+        el.remove();
+      }
+    });
+
+    playfield.appendChild(el);
+  }
+
+  function endGame(){
+    gameActive = false;
+    clearTimeout(spawnTimer);
+    // clear remaining falling hearts
+    playfield.querySelectorAll('.falling').forEach(e => e.remove());
+    gameScreen.classList.remove('active');
+    letterScreen.classList.add('active');
+  }
+
+  // ---------- envelope + letter ----------
+  const noteText = "I don't think you know how beautiful you actually are. I don't just mean how you look, though you clearly have no idea what that does to a room. I mean the way you carry yourself like you already know how the story ends. Your confidence isn't loud, it's quiet and certain, and it never needs anyone's approval to exist. Honestly, it might be my favorite thing about you.\n\nThen there's the laziness. The way you'll swear you're \"just resting\" for the fourth hour straight, the way getting you off the couch takes more convincing than a peace treaty. I complain about it, but if I'm being honest, I find it kind of adorable. It's very, very you.\n\nAnd the way you talk, that's a whole thing on its own. You manage to turn the most ordinary sentence into a performance you never rehearsed, and somehow I could listen to you talk about absolutely nothing for hours and still be interested.\n\nI don't really know what to call this, or what we are. But whatever this is, I like it. Thanks for being exactly, unapologetically you.";
+
+  const envelope = document.getElementById('envelope');
+  const letterPaper = document.getElementById('letterPaper');
+  const letterBody = document.getElementById('letterBody');
+  const envHint = document.getElementById('envHint');
+  const replayBtn = document.getElementById('replayBtn');
+
+  let opened = false;
+  envelope.addEventListener('click', () => {
+    if(opened) return;
+    opened = true;
+    envelope.classList.add('open');
+    envHint.textContent = 'read slow 🩷';
+    setTimeout(() => {
+      letterBody.textContent = noteText;
+      letterPaper.classList.add('show');
+      replayBtn.classList.remove('hidden');
+    }, 450);
+  });
+
+  replayBtn.addEventListener('click', () => {
+    location.reload();
+  });
+</script>
+</body>
+</html>
